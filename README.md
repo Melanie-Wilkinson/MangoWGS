@@ -1,5 +1,5 @@
 # MangoWGS
-## 225 Mangifera indica, raw vcf file with non-variants
+225 Mangifera indica, raw vcf file with non-variants
 
 ## SNP filtering
 
