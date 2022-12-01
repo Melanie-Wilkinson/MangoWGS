@@ -111,3 +111,31 @@ vcftools/bin/vcftools --gzvcf ./qf4/2_quality_filtering/12_QF2.vcf.gz --hwe 1e-6
 ```
 
 ## 2. Population genetics analyses
+### Thin and create PCA of QF2
+
+Create list of thinned variants (thin.in)
+```
+./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
+--double-id --allow-extra-chr --set-missing-var-ids @:# --allow-no-sex \
+--indep-pairwise 50 10 0.1 \
+--out ./qf4/3_popgen/4_thin_PCA/QF2_thin
+```
+
+Prune (using extract) and create pca
+```
+./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
+--double-id --allow-extra-chr --set-missing-var-ids @:# \
+--extract ./qf4/3_popgen/4_thin_PCA/QF2_thin.prune.in --pca --out ./qf4/3_popgen/4_thin_PCA/QF2_PCA
+```
+
+### LD decay = poplddecay
+Run PopLDdecay using QF2
+```
+./qf4/3_popgen/2_LDdecay/PopLDdecay/bin/PopLDdecay -InVCF ./qf4/2_quality_filtering/12_QF2.vcf -OutStat ./qf4/3_popgen/2_LDdecay/QF1_LDdecay 
+```
+
+### Nucleotide diversity (pi)
+Output pi for 100kb windows on all sites
+```
+vcftools/bin/vcftools --vcf ./qf4/2_quality_filtering/11_QF1.vcf --window-pi 100000 --out ./qf4/3_popgen/5_AF_pi/100kb_pi_QF1
+```
