@@ -3,7 +3,13 @@
 
 1. SNP filtering from raw vcf
 2. Population genetics analyses
+	2a. Principal components analysis (PCA)
+	2b. Nucleotide diversity (pi)
+	2c. Allelic frequency (AF)
+	2d. Linkage disequilibrium (LD) decay
+	2e. Linkage disequilibrium (LD) across the genome (Mean LD per 200kb window)
 3. Identifying deleterious mutations using SIFT
+4. Genome-wide association study (GWAS)
 
 ## 1. SNP filtering
 ### QF1
@@ -99,21 +105,22 @@ bcftools view ./qf4/2_quality_filtering/10_SNPs_only.vcf.gz -f.,PASS --output-ty
 ```
 
 ### QF2 (QF1 + MAF)
-Minor allele frequency of 0.01
+Remove sites with a minor allele frequency of < 0.01
 ```
 vcftools/bin/vcftools --gzvcf ./qf4/2_quality_filtering/11_QF1.vcf.gz --maf 0.01 --recode --recode-INFO-all --stdout | gzip -c > ./qf4/2_quality_filtering/12_MAF.vcf.gz
 ```
 
 ### QF3 (QF1 + MAF + HWE)
-Hardy Weinberg Equilibrium (HWE) 1e-6
+Remove sites with Hardy Weinberg Equilibrium (HWE) < 1e-6
 ```
 vcftools/bin/vcftools --gzvcf ./qf4/2_quality_filtering/12_QF2.vcf.gz --hwe 1e-6 --recode --recode-INFO-all --stdout | gzip -c > ./qf4/2_quality_filtering/13_QF3.vcf.gz
 ```
 
 ## 2. Population genetics analyses
-### Thin and create PCA of QF2
+### 2a. Thin and create PCA of QF2
 
 Create list of thinned variants (thin.in)
+Consider a window of 50 SNPs, calculate LD between each pair of SNPs in the window, remove one of a pair of SNPs if the LD is greater than 0.1, shift the window 10 SNPs forward and repeat the procedure.  
 ```
 ./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
 --double-id --allow-extra-chr --set-missing-var-ids @:# --allow-no-sex \
@@ -128,14 +135,61 @@ Prune (using extract) and create pca
 --extract ./qf4/3_popgen/4_thin_PCA/QF2_thin.prune.in --pca --out ./qf4/3_popgen/4_thin_PCA/QF2_PCA
 ```
 
-### LD decay = poplddecay
+### 2b. Nucleotide diversity (pi)
+Output pi for 100kb windows on all sites
+```
+vcftools/bin/vcftools --vcf ./qf4/2_quality_filtering/11_QF1.vcf --window-pi 100000 --out ./qf4/3_popgen/5_AF_pi/100kb_pi_QF1
+```
+
+### 2c. Allelic frequency (AF)
+Output AF of all sites, including non-variant
+```
+vcftools/bin/vcftools --vcf ./qf4/2_quality_filtering/11_QF1.vcf --freq --out ./qf4/3_popgen/5_AF_pi/AF_QF1
+```
+
+### 2d. LD decay = poplddecay (Zhang et al. 2018) https://academic.oup.com/bioinformatics/article/35/10/1786/5132693?login=true
+https://github.com/BGI-shenzhen/PopLDdecay
+
 Run PopLDdecay using QF2
 ```
 ./qf4/3_popgen/2_LDdecay/PopLDdecay/bin/PopLDdecay -InVCF ./qf4/2_quality_filtering/12_QF2.vcf -OutStat ./qf4/3_popgen/2_LDdecay/QF1_LDdecay 
 ```
 
-### Nucleotide diversity (pi)
-Output pi for 100kb windows on all sites
+### 2e. Linkage disequilibrium (LD) across the genome (Mean LD per 200kb window)
 ```
-vcftools/bin/vcftools --vcf ./qf4/2_quality_filtering/11_QF1.vcf --window-pi 100000 --out ./qf4/3_popgen/5_AF_pi/100kb_pi_QF1
+./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
+--double-id --allow-extra-chr --set-missing-var-ids @:# --allow-no-sex \
+--out QF2_chr01 --ld-window-kb 200 --ld-window-r2 0 --r2 \
+--chr NC_058137.1
+```
+
+## 3. Identifying deleterious mutations using SIFT
+
+## 4. Genome-wide association study (GWAS) using plink 1.9 
+
+Create list of thinned variants (thin.in)
+
+Consider a window of 50 SNPs, calculate LD between each pair of SNPs in the window, remove one of a pair of SNPs if the LD is greater than 0.1, shift the window 10 SNPs forward and repeat the procedure.  
+
+```
+./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
+--double-id --allow-extra-chr --set-missing-var-ids @:# --allow-no-sex \
+--indep-pairwise 50 10 0.1 \
+--out ./qf4/5_GWAS/QF2_thin
+```
+
+Prune (using extract) and create PCA (eigenvec and eigenvalue used as covariants in GWAS)
+```
+./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
+--double-id --allow-extra-chr --set-missing-var-ids @:# \
+--extract ./qf4/3_popgen/4_thin_PCA/QF2_thin.prune.in --pca --out ./qf4/3_popgen/4_thin_PCA/QF2_PCA
+```
+
+Association test with PC1 - PC6 (explains 50% of variation) as covariants
+Phenotype file is ID1 ID2 phenotype_value
+```
+./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz --pheno ./qf4/5_GWAS/TC_Age12_WRS_GWAS.txt \
+--double-id --allow-extra-chr --set-missing-var-ids @:# --allow-no-sex \
+--adjust --ci 0.95 --covar ./qf4/5_GWAS/QF2_pruned.eigenvec --covar-number 1-6 --linear \
+--out ./qf4/5_GWAS/4_TC_10AG_12years_178i_cov6_QF2 --extract ./qf4/5_GWAS/QF2_thin.prune.in
 ```
