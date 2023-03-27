@@ -2,13 +2,21 @@
 225 Mangifera indica, raw vcf file with non-variants
 
 1. SNP filtering from raw vcf
+
 2. Population genetics analyses
+	
 	2a. Principal components analysis (PCA)
-	2b. Nucleotide diversity (pi)
-	2c. Allelic frequency (AF)
-	2d. Linkage disequilibrium (LD) decay
-	2e. Linkage disequilibrium (LD) across the genome (Mean LD per 200kb window)
+	
+	2b. Nucleotide diversity (pi) 
+	
+	2c. Allelic frequency (AF) 
+	
+	2d. Linkage disequilibrium (LD) decay 
+	
+	2e. Linkage disequilibrium (LD) across the genome (mean LD per 200kb window) 
+	 
 3. Identifying deleterious mutations using SIFT
+
 4. Genome-wide association study (GWAS)
 
 ## 1. SNP filtering
@@ -147,7 +155,8 @@ Output AF of all sites, including non-variant
 vcftools/bin/vcftools --vcf ./qf4/2_quality_filtering/11_QF1.vcf --freq --out ./qf4/3_popgen/5_AF_pi/AF_QF1
 ```
 
-### 2d. LD decay = poplddecay (Zhang et al. 2018) https://academic.oup.com/bioinformatics/article/35/10/1786/5132693?login=true
+### 2d. Linkage disequilibrium (LD) decay
+Using poplddecay [(Zhang et al. 2018)](https://academic.oup.com/bioinformatics/article/35/10/1786/5132693?login=true)
 https://github.com/BGI-shenzhen/PopLDdecay
 
 Run PopLDdecay using QF2
@@ -167,9 +176,7 @@ Run PopLDdecay using QF2
 
 ## 4. Genome-wide association study (GWAS) using plink 1.9 
 
-Create list of thinned variants (thin.in)
-
-Consider a window of 50 SNPs, calculate LD between each pair of SNPs in the window, remove one of a pair of SNPs if the LD is greater than 0.1, shift the window 10 SNPs forward and repeat the procedure.  
+Create list of thinned variants (thin.in), where '--indep-pairwise' is consider a window of 50 SNPs, calculate LD between each pair of SNPs in the window, remove one of a pair of SNPs if the LD is greater than 0.1, shift the window 10 SNPs forward and repeat the procedure.  
 
 ```
 ./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
@@ -178,7 +185,7 @@ Consider a window of 50 SNPs, calculate LD between each pair of SNPs in the wind
 --out ./qf4/5_GWAS/QF2_thin
 ```
 
-Prune (using extract) and create PCA (eigenvec and eigenvalue used as covariants in GWAS)
+Prune (using extract) and create PCA (eigenvec and eigenval used as covariants in GWAS)
 ```
 ./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
 --double-id --allow-extra-chr --set-missing-var-ids @:# \
