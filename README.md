@@ -193,6 +193,7 @@ Prune (using extract) and create PCA (eigenvec and eigenval used as covariants i
 ```
 
 Association test with PC1 - PC6 (explains 50% of variation) as covariants
+
 Phenotype file is ID1 ID2 phenotype_value
 ```
 ./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz --pheno ./qf4/5_GWAS/TC_Age12_WRS_GWAS.txt \
