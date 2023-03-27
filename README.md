@@ -128,7 +128,7 @@ vcftools/bin/vcftools --gzvcf ./qf4/2_quality_filtering/12_QF2.vcf.gz --hwe 1e-6
 ### 2a. Thin and create PCA of QF2
 
 Create list of thinned variants (thin.in)
-Consider a window of 50 SNPs, calculate LD between each pair of SNPs in the window, remove one of a pair of SNPs if the LD is greater than 0.1, shift the window 10 SNPs forward and repeat the procedure.  
+Consider a window of 50kb, calculate LD between each pair of SNPs in the window, remove one of a pair of SNPs if the LD is greater than 0.1, shift the window 10 SNPs forward and repeat the procedure.  
 ```
 ./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
 --double-id --allow-extra-chr --set-missing-var-ids @:# --allow-no-sex \
@@ -176,7 +176,7 @@ Run PopLDdecay using QF2
 
 ## 4. Genome-wide association study (GWAS) using plink 1.9 
 
-Create list of thinned variants (thin.in), where '--indep-pairwise' is consider a window of 50 SNPs, calculate LD between each pair of SNPs in the window, remove one of a pair of SNPs if the LD is greater than 0.1, shift the window 10 SNPs forward and repeat the procedure.  
+Create list of thinned variants (thin.in), where '--indep-pairwise' is consider a window of 50kb, calculate LD between each pair of SNPs in the window, remove one of a pair of SNPs if the LD is greater than 0.1, shift the window 10 SNPs forward and repeat the procedure.  
 
 ```
 ./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
