@@ -156,7 +156,7 @@ vcftools/bin/vcftools --vcf ./qf4/2_quality_filtering/11_QF1.vcf --freq --out ./
 ```
 
 ### 2d. Linkage disequilibrium (LD) decay
-Using poplddecay [(Zhang et al. 2018)](https://academic.oup.com/bioinformatics/article/35/10/1786/5132693?login=true)
+Poplddecay [(Zhang et al. 2018)](https://academic.oup.com/bioinformatics/article/35/10/1786/5132693?login=true)
 https://github.com/BGI-shenzhen/PopLDdecay
 
 Run PopLDdecay using QF2
@@ -174,9 +174,11 @@ Run PopLDdecay using QF2
 
 ## 3. Identifying deleterious mutations using SIFT
 
-## 4. Genome-wide association study (GWAS) using plink 1.9 
+## 4. Genome-wide association study (GWAS) 
 
-Create list of thinned variants (thin.in), where '--indep-pairwise' is consider a window of 50kb, calculate LD between each pair of SNPs in the window, remove one of a pair of SNPs if the LD is greater than 0.1, shift the window 10 SNPs forward and repeat the procedure.  
+### 4a. Continuous phenotype
+
+Plink 1.9 [(Purcell et al. 2009)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1950838/) Create list of thinned variants (thin.in), where '--indep-pairwise' is consider a window of 50kb, calculate LD between each pair of SNPs in the window, remove one of a pair of SNPs if the LD is greater than 0.1, shift the window 10 SNPs forward and repeat the procedure.  
 
 ```
 ./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
@@ -192,12 +194,36 @@ Prune (using extract) and create PCA (eigenvec and eigenval used as covariants i
 --extract ./qf4/3_popgen/4_thin_PCA/QF2_thin.prune.in --pca --out ./qf4/3_popgen/4_thin_PCA/QF2_PCA
 ```
 
-Association test with PC1 - PC6 (explains 50% of variation) as covariants
-
-Phenotype file is ID1 ID2 phenotype_value
+Association test with PC1 - PC6 (explains 50% of variation) as covariants, where phenotype file is ID1 ID2 phenotype_value
 ```
 ./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz --pheno ./qf4/5_GWAS/TC_Age12_WRS_GWAS.txt \
 --double-id --allow-extra-chr --set-missing-var-ids @:# --allow-no-sex \
 --adjust --ci 0.95 --covar ./qf4/5_GWAS/QF2_pruned.eigenvec --covar-number 1-6 --linear \
 --out ./qf4/5_GWAS/4_TC_10AG_12years_178i_cov6_QF2 --extract ./qf4/5_GWAS/QF2_thin.prune.in
+```
+
+### 4a. 2 category phenotype
+
+Plink 1.9 [(Purcell et al. 2009)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1950838/) Create list of thinned variants (thin.in), where '--indep-pairwise' is consider a window of 50kb, calculate LD between each pair of SNPs in the window, remove one of a pair of SNPs if the LD is greater than 0.1, shift the window 10 SNPs forward and repeat the procedure.  
+
+```
+./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
+--double-id --allow-extra-chr --set-missing-var-ids @:# --allow-no-sex \
+--indep-pairwise 50 10 0.1 \
+--out ./qf4/5_GWAS/QF2_thin
+```
+
+Prune (using extract) and create PCA (eigenvec and eigenval used as covariants in GWAS)
+```
+./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
+--double-id --allow-extra-chr --set-missing-var-ids @:# \
+--extract ./qf4/3_popgen/4_thin_PCA/QF2_thin.prune.in --pca --out ./qf4/3_popgen/4_thin_PCA/QF2_PCA
+```
+
+Association test with PC1 - PC6 (explains 50% of variation) as covariants, where phenotype file is ID1 ID2 phenotype(1 or 2)
+```
+./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz --pheno ./qf4/5_GWAS/BlushColour/2_2cats/GWAS_blushcolour_cat.tsv \
+--double-id --allow-extra-chr --set-missing-var-ids @:# --allow-no-sex \
+--adjust --ci 0.95 --covar ./qf4/5_GWAS/QF2_pruned.eigenvec --covar-number 1-6 --logistic \
+--out ./qf4/5_GWAS/1_BC_188i_cov6_QF2 --extract ./qf4/5_GWAS/QF2_thin.prune.in
 ```
