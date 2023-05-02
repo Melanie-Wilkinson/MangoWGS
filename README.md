@@ -191,7 +191,7 @@ Prune (using extract) and create PCA (eigenvec and eigenval used as covariants i
 ```
 ./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
 --double-id --allow-extra-chr --set-missing-var-ids @:# \
---extract ./qf4/3_popgen/4_thin_PCA/QF2_thin.prune.in --pca --out ./qf4/3_popgen/4_thin_PCA/QF2_PCA
+--extract ./qf4/5_GWAS/QF2_thin.prune.in --pca --out ./qf4/5_GWAS/QF2_pruned
 ```
 
 Association test with PC1 - PC6 (explains 50% of variation) as covariants, where phenotype file is ID1 ID2 phenotype_value
@@ -217,7 +217,7 @@ Prune (using extract) and create PCA (eigenvec and eigenval used as covariants i
 ```
 ./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
 --double-id --allow-extra-chr --set-missing-var-ids @:# \
---extract ./qf4/3_popgen/4_thin_PCA/QF2_thin.prune.in --pca --out ./qf4/3_popgen/4_thin_PCA/QF2_PCA
+--extract ./qf4/5_GWAS/QF2_thin.prune.in --pca --out ./qf4/5_GWAS/QF2_pruned
 ```
 
 Association test with PC1 - PC6 (explains 50% of variation) as covariants, where phenotype file is ID1 ID2 phenotype(1 or 2)
