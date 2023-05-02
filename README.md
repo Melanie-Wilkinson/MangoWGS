@@ -199,7 +199,7 @@ Association test with PC1 - PC6 (explains 50% of variation) as covariants, where
 ./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz --pheno ./qf4/5_GWAS/TC_Age12_WRS_GWAS.txt \
 --double-id --allow-extra-chr --set-missing-var-ids @:# --allow-no-sex \
 --adjust --ci 0.95 --covar ./qf4/5_GWAS/QF2_pruned.eigenvec --covar-number 1-6 --linear \
---out ./qf4/5_GWAS/4_TC_10AG_12years_178i_cov6_QF2 --extract ./qf4/5_GWAS/QF2_thin.prune.in
+--extract ./qf4/5_GWAS/QF2_thin.prune.in --out ./qf4/5_GWAS/QF2_pruned
 ```
 
 ### 4a. 2 category phenotype
@@ -216,8 +216,8 @@ Plink 1.9 [(Purcell et al. 2009)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1
 Prune (using extract) and create PCA (eigenvec and eigenval used as covariants in GWAS)
 ```
 ./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
---double-id --allow-extra-chr --set-missing-var-ids @:# \
---extract ./qf4/3_popgen/4_thin_PCA/QF2_thin.prune.in --pca --out ./qf4/3_popgen/4_thin_PCA/QF2_PCA
+--double-id --allow-extra-chr --set-missing-var-ids @:# --PCA \
+--extract ./qf4/5_GWAS/QF2_thin.prune.in --out ./qf4/5_GWAS/QF2_pruned
 ```
 
 Association test with PC1 - PC6 (explains 50% of variation) as covariants, where phenotype file is ID1 ID2 phenotype(1 or 2)
