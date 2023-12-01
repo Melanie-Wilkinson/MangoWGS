@@ -1,25 +1,24 @@
-![image](https://github.com/KathleenMcLay/MangoWGS/assets/81064774/eaabc918-219c-40d9-bc13-f2880b0e4a5e)# MangoWGS
+# MangoWGS
 225 Mangifera indica, raw vcf file with non-variants
 
 1. SNP filtering from raw vcf
 
 2. Population genetics analyses
-	
 	2a. Principal components analysis (PCA)
-	
-	2b. Nucleotide diversity (pi) 
-	
-	2c. Allelic frequency (AF) 
-	
-	2d. Linkage disequilibrium (LD) decay 
-	
-	2e. Linkage disequilibrium (LD) across the genome (mean LD per 200kb window) 
-	 
-3. Identifying deleterious mutations using SIFT
 
-4. Genome-wide association study (GWAS)
+	2b. Nucleotide diversity (pi)
+
+	2c. Allelic frequency (AF)
+
+	2d. Linkage disequilibrium (LD) decay
+
+	2e. Linkage disequilibrium (LD) heatmap
+	 
+4. Identifying deleterious mutations using SIFT
+
+5. Genome-wide association study (GWAS)
    
-5. Local Principal Component Analysis 
+6. Local Principal Component Analysis 
 
 ## 1. SNP filtering
 ### QF1
@@ -146,9 +145,9 @@ Prune (using extract) and create pca
 ```
 
 ### 2b. Nucleotide diversity (pi)
-Output pi for 100kb windows on all sites
+Output pi for 10kb windows on all sites using pixy
 ```
-vcftools/bin/vcftools --vcf ./qf4/2_quality_filtering/11_QF1.vcf --window-pi 100000 --out ./qf4/3_popgen/5_AF_pi/100kb_pi_QF1
+pixy --stats pi --vcf ./qf4/2_quality_filtering/11_QF1.vcf.gz --window_size 10000
 ```
 
 ### 2c. Allelic frequency (AF)
@@ -166,19 +165,20 @@ Run PopLDdecay using QF2
 ./qf4/3_popgen/2_LDdecay/PopLDdecay/bin/PopLDdecay -InVCF ./qf4/2_quality_filtering/12_QF2.vcf -OutStat ./qf4/3_popgen/2_LDdecay/QF1_LDdecay 
 ```
 
-### 2e. Linkage disequilibrium (LD) across the genome (Mean LD per 200kb window)
+### 2e. Linkage disequilibrium (LD) heatmap
 ```
-./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
---double-id --allow-extra-chr --set-missing-var-ids @:# --allow-no-sex \
---out QF2_chr01 --ld-window-kb 200 --ld-window-r2 0 --r2 \
---chr NC_058137.1
+
+We used the script emerald2windowldcounts.pl from https://github.com/owensgl/reformat
+# loop to do LD for every chromosome seperately
+for chr in "${chr[@]}"; do
+bcftools view -r ${chr} ./qf4/2_quality_filtering/12_QF2bgzip.vcf.gz | /g/data/ht96/Mel_UQ/vcftools/bin/vcftools --vcf - --maf 0.05 --thin 1000 -c --geno-r2 --max-missing-count 0 | perl ./3_popgen/3_LDperChr/reformat/emerald2windowldcounts.pl > /g/data/ht96/Mel_UQ/qf4/3_popgen/3_LDperChr/${chr}.ld.txt
+
+done
 ```
 
 ## 3. Identifying deleterious mutations using SIFT
 
-## 4. Genome-wide association study (GWAS) 
-
-### 4a. Continuous phenotype
+## 4. Genome-wide association study (GWAS) on continuous phenotype
 
 Plink 1.9 [(Purcell et al. 2009)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1950838/) Create list of thinned variants (thin.in), where '--indep-pairwise' is consider a window of 50kb, calculate LD between each pair of SNPs in the window, remove one of a pair of SNPs if the LD is greater than 0.1, shift the window 10 SNPs forward and repeat the procedure.  
 
@@ -204,31 +204,6 @@ Association test with PC1 - PC6 (explains 50% of variation) as covariants, where
 --extract ./qf4/5_GWAS/QF2_thin.prune.in --out ./qf4/5_GWAS/QF2_pruned
 ```
 
-### 4a. 2 category phenotype
-
-Plink 1.9 [(Purcell et al. 2009)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1950838/) Create list of thinned variants (thin.in), where '--indep-pairwise' is consider a window of 50kb, calculate LD between each pair of SNPs in the window, remove one of a pair of SNPs if the LD is greater than 0.1, shift the window 10 SNPs forward and repeat the procedure.  
-
-```
-./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
---double-id --allow-extra-chr --set-missing-var-ids @:# --allow-no-sex \
---indep-pairwise 50 10 0.1 \
---out ./qf4/5_GWAS/QF2_thin
-```
-
-Prune (using extract) and create PCA (eigenvec and eigenval used as covariants in GWAS)
-```
-./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz \
---double-id --allow-extra-chr --set-missing-var-ids @:# \
---extract ./qf4/5_GWAS/QF2_thin.prune.in --pca --out ./qf4/5_GWAS/QF2_pruned
-```
-
-Association test with PC1 - PC6 (explains 50% of variation) as covariants, where phenotype file is ID1 ID2 phenotype(1 or 2)
-```
-./plink --vcf ./qf4/2_quality_filtering/12_QF2.vcf.gz --pheno ./qf4/5_GWAS/BlushColour/2_2cats/GWAS_blushcolour_cat.tsv \
---double-id --allow-extra-chr --set-missing-var-ids @:# --allow-no-sex \
---adjust --ci 0.95 --covar ./qf4/5_GWAS/QF2_pruned.eigenvec --covar-number 1-6 --logistic \
---out ./qf4/5_GWAS/1_BC_188i_cov6_QF2 --extract ./qf4/5_GWAS/QF2_thin.prune.in
-```
 
 ## 5. Local Principal Component Analysis 
 
