@@ -1,4 +1,4 @@
-# MangoWGS
+![image](https://github.com/KathleenMcLay/MangoWGS/assets/81064774/eaabc918-219c-40d9-bc13-f2880b0e4a5e)# MangoWGS
 225 Mangifera indica, raw vcf file with non-variants
 
 1. SNP filtering from raw vcf
@@ -18,6 +18,8 @@
 3. Identifying deleterious mutations using SIFT
 
 4. Genome-wide association study (GWAS)
+   
+5. Local Principal Component Analysis 
 
 ## 1. SNP filtering
 ### QF1
@@ -227,3 +229,34 @@ Association test with PC1 - PC6 (explains 50% of variation) as covariants, where
 --adjust --ci 0.95 --covar ./qf4/5_GWAS/QF2_pruned.eigenvec --covar-number 1-6 --logistic \
 --out ./qf4/5_GWAS/1_BC_188i_cov6_QF2 --extract ./qf4/5_GWAS/QF2_thin.prune.in
 ```
+
+## 5. Local Principal Component Analysis 
+
+Remove invariant sites using ```GATK v4.2.5``` SelectVariants [(Van der Auwera & O'Connor 2020)](https://www.oreilly.com/library/view/genomics-in-the/9781491975183/).
+```
+gatk SelectVariants -R GCF_011075055.1_CATAS_Mindica_2.1_genomic.fna -V 11_QF1.vcf.gz --exclude-non-variants --select-type-to-include SNP -O QF1_variant_only.vcf 
+```
+Remove contigs that are not aligned to a chromosome using ```bcftools v1.12``` [(Danecek et al. 2021)](https://academic.oup.com/gigascience/article/10/2/giab008/6137722).
+```
+bcftools view ${DIR}/11_QF1_variant_only.vcf.gz -R chrom_list.tsv -o QF1_variant_only.vcf 
+```
+Remove sites with greater than 95% missing data using ```VCFtools v0.1.17``` [(Danecek et al. 2011)](https://academic.oup.com/bioinformatics/article/27/15/2156/402296). 
+```
+vcftools --gzvcf 11_QF1_variant_only.vcf.gz --max-missing 0.95 --recode --recode-INFO-all --out QF1_variant_only_95miss
+```
+Convert SNP dataset to BCF format using ```bcftools v1.12```.
+```
+bcftools convert -O b QF1_variant_only_95miss.vcf > QF1_variant_only_95miss.bcf
+bcftools index QF1_variant_only_95miss.bcf
+```
+Perform local PCA with the R package ```lostruct v0.0.0.9000``` [(Li & Ralph 2019)](https://academic.oup.com/genetics/article/211/1/289/5931130?login=true) on windows of 1000SNPs.
+Perform PCA of outlier regions identified through local PCA analysis. 
+These analyses was performed using code from and as detailed in [(Huang et al. 2020)](https://onlinelibrary-wiley-com.ezproxy.library.uq.edu.au/doi/10.1111/mec.15428). 
+
+
+
+
+
+
+
+
