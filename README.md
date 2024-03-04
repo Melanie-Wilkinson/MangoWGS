@@ -247,7 +247,10 @@ Find deleterious scores for all sites using SIFT 4G [(Vaser et al. 2016)](https:
 java -jar SIFT4G_Annotator.jar -c -i 11_QF1.vcf -d assembly_CATAS_Mindica_2.1 -r 1_225i_all
 ```
 
-
+Output allelic frequency for specified sites using ```VCFtools v0.1.17```.
+```
+vcftools --vcf 11_QF1.vcf --freq --positions del_mutations.txt
+```		
 
 
 
