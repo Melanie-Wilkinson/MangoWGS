@@ -236,7 +236,7 @@ Use test_files/homo_sapiens-test.txt as a template and modify as below <br>
 		**Removed** - Mitochondria or cholorplast (plastid) annotation files and DBSNP_VCF_FILE 
 ```
 
-Create database using [python2 v2.7.17]
+Create database
 ```
 perl make-SIFT-db-all.pl -config mango_config.txt
 ```	
