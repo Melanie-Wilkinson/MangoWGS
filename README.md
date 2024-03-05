@@ -252,6 +252,8 @@ Output allelic frequency for specified sites using ```VCFtools v0.1.17```.
 vcftools --vcf 11_QF1.vcf --freq --positions del_mutations.txt
 ```		
 
-
-
+Output genotypes for specified sites using ```bcftools v1.12```.
+```
+bcftools query -H -f '%CHROM:%POS\t%REF\t%ALT[\t%GT]\n' 11_QF1.vcf.gz --regions NC_058141.1:7109828
+```
 
