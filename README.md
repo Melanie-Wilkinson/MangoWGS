@@ -124,6 +124,45 @@ vcftools --gzvcf 11_QF1.vcf.gz --maf 0.01 --recode --recode-INFO-all --stdout | 
 ```
 
 ## 3. Centromere estimation 
+Estimate centromere location in _Mangifera indica_ cv. 'Alphonso' (version: CATAS_Mindica_2.1) using  ```RepeatOBserverV1``` [(Elphinstone et al. 2023)](https://www.biorxiv.org/content/10.1101/2023.12.30.573697v1) <br>
+Alphonso genome info: <br>
+ https://www.ncbi.nlm.nih.gov/datasets/taxonomy/29780/ <br>
+ https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_011075055.1/
+
+Download the Setup_Run_Repeats.sh from github
+```
+wget https://raw.githubusercontent.com/celphin/RepeatOBserverV1/main/Setup_Run_Repeats.sh
+chmod +x Setup_Run_Repeats.sh
+dos2unix Setup_Run_Repeats.sh
+```
+
+To install the R package "RepeatOBserverV1", you will first need to install the package devtools in your version of R.
+```
+install.packages("devtools")
+library(devtools)
+install_github("celphin/RepeatOBserverV1")
+library(RepeatOBserverV1)
+```
+
+------------------------------
+go to FTP directory for GenBank assembly (version: CATAS_Mindica_2.1)
+```
+wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/011/075/055/GCF_011075055.1_CATAS_Mindica_2.1/GCF_011075055.1_CATAS_Mindica_2.1_genomic.fna.gz
+
+gunzip GCF_011075055.1_CATAS_Mindica_2.1_genomic.fna.gz
+
+mv GCF_011075055.1_CATAS_Mindica_2.1_genomic.fna Mango.fasta
+```
+---------------------------------
+Estimate centromeres
+```
+module load StdEnv/2020
+module load seqkit/2.3.1
+module load emboss/6.6.0
+module load r/4.1.2
+
+srun Setup_Run_Repeats.sh -i Mango -f Mango.fasta -h H0 -c 20 -m 191000M -g FALSE
+```
 
 ## 4. Local Principal Component Analysis 
 
