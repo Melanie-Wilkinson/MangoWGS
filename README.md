@@ -21,7 +21,116 @@
 
 
 ## 1. Alignments and variant calling
-   
+### [Mangifera indica cv Alphonso reference genome is available at the NCBI]( https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/011/075/055/GCA_011075055.1_CATAS_Mindica_2.1/)
+Concatenating Multiple Read Sets for Each Sample
+```
+cat forward_reads_*.fastq > concatenated_forward_reads.fastq
+cat reverse_reads_*.fastq > concatenated_reverse_reads.fastq
+```
+Removing Adapters with Trimmomatic
+```
+java -jar trimmomatic-0.39.jar PE \
+  concatenated_forward_reads.fastq concatenated_reverse_reads.fastq \
+  trimmed_forward_paired.fastq trimmed_forward_unpaired.fastq \
+  trimmed_reverse_paired.fastq trimmed_reverse_unpaired.fastq \
+  ILLUMINACLIP:TruSeq2-PE-2.fa:2:30:10 MINLEN:36
+```
+Creating an Index File from the Reference Genome
+```
+samtools faidx M_indica_Alphonso.fasta
+```
+Creating a Dictionary File from the Reference Genome
+```
+java -jar picard.jar CreateSequenceDictionary \
+      R=M_indica_Alphonso.fasta \
+      O=M_indica_Alphonso.dict
+```
+Creating an Interval List from the Reference Genome
+```
+awk '{print $1 ":" "1" "-" $2}' M_indica_Alphonso.fasta.fai > M_indica_Alphonso_intervals.list
+```
+Aligning Reads to Reference Genome with BWA MEM
+```
+bwa mem -v 3 -Y -K 100000000 -M \
+  M_indica_Alphonso.fasta \
+  trimmed_forward_paired.fastq trimmed_reverse_paired.fastq > aln-pe.sam
+```
+Deduplicating Alignments with Samtools
+```
+samtools sort -o sorted_aln-pe.bam aln-pe.sam
+samtools markdup sorted_aln-pe.bam dedup_aln-pe.bam
+```
+Calling Variants with GATK HaplotypeCaller
+```
+gatk HaplotypeCaller \
+  -R M_indica_Alphonso.fasta \
+  -I dedup_aln-pe.bam \
+  --emit-ref-confidence GVCF \
+  -O output.g.vcf
+```
+Creating a Sample Map
+```
+for gvcf in /path/to/gvcfs/*.g.vcf; do
+    sample_name=$(basename "$gvcf" .g.vcf)
+    echo "${sample_name}:${gvcf}"
+done > sample_map.txt
+```
+Importing gVCFs into a GenomicsDB Workspace
+```
+gatk GenomicsDBImport \
+   --genomicsdb-workspace-path my_genomicsdb_workspace \
+   --sample-name-map sample_map.txt \
+   --TMP_DIR=/path/to/tmpdir \
+   -L M_indica_Alphonso_intervals.list
+```
+Joint Calling Genotypes with GATK
+```
+gatk GenotypeGVCFs \
+   -R M_indica_Alphonso.fasta \
+   -V gendb://my_genomicsdb_workspace \
+   -O joint_genotypes.vcf \
+   -L M_indica_intervals.list
+```
+Selecting SNPs with GATK SelectVariants
+```
+gatk SelectVariants \
+  -R M_indica_Alphonso.fasta \
+  -V joint_genotypes.vcf \
+  -select-type SNP \
+  --output snps.vcf
+```
+Selecting Indels with GATK SelectVariants
+```
+gatk SelectVariants \
+  -R M_indica_Alphonso.fasta \
+  -V joint_genotypes.vcf \
+  -select-type INDEL \
+  --output indels.vcf
+```
+Soft Filtering of SNPs with GATK VariantFiltration
+```
+gatk VariantFiltration \
+  -R M_indica_Alphonso.fasta \
+  -V snps.vcf \
+  -filter "QD < 2.0" --filter-name "QD2" \
+  -filter "QUAL < 30.0" --filter-name "QUAL30" \
+  -filter "SOR > 3.0" --filter-name "SOR3" \
+  -filter "FS > 60.0" --filter-name "FS60" \
+  -filter "MQ < 40.0" --filter-name "MQ40" \
+  -filter "MQRankSum < -12.5" --filter-name "MQRankSum-12.5" \
+  -filter "ReadPosRankSum < -8.0" --filter-name "ReadPosRankSum-8" \
+  --output filtered_snps.vcf
+```
+Soft Filtering of Indels with GATK VariantFiltration
+```
+gatk VariantFiltration \
+  -R M_indica_Alphonso.fasta \
+  -V indels.vcf \
+  -filter "QD < 2.0" --filter-name "QD_filter" \
+  -filter "FS > 200.0" --filter-name "FS_filter" \
+  -filter "SOR > 3.0" --filter-name "SOR" \
+  --output filtered_indels.vcf
+``` 
 
 
 ## 2. SNP filtering
