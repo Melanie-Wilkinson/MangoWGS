@@ -21,7 +21,8 @@
 
 
 ## 1. Alignments and variant calling
-### [Mangifera indica cv Alphonso reference genome is available at the NCBI]( https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/011/075/055/GCA_011075055.1_CATAS_Mindica_2.1/)
+[Mangifera indica cv Alphonso reference genome is available at NCBI]( https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/011/075/055/GCA_011075055.1_CATAS_Mindica_2.1/) <br>
+
 Concatenating Multiple Read Sets for Each Sample
 ```
 cat forward_reads_*.fastq > concatenated_forward_reads.fastq
